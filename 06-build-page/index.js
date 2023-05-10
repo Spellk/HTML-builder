@@ -26,8 +26,6 @@ async function replaceTemplateTags(template, components) {
 
 async function buildPage() {
   try {
-    await fs.mkdir(distDir);
-
     const templateContent = await fs.readFile(tempFile, "utf-8");
     const components = await fs.readdir(componentsDir);
     const indexContent = await replaceTemplateTags(templateContent, components);
@@ -43,7 +41,11 @@ async function buildPage() {
 
     const assetFiles = await fs.readdir(assetsDir);
     const assetDir = path.join(distDir, "assets");
-    await fs.mkdir(assetDir);
+    try {
+      await fs.access(assetDir);
+    } catch {
+      await fs.mkdir(assetDir);
+    }
     for (let file of assetFiles) {
       const sourcePath = path.join(assetsDir, file);
       const destPath = path.join(assetDir, file);
@@ -62,7 +64,15 @@ async function buildPage() {
 }
 
 async function copyFolder(src, dest) {
-  await fs.mkdir(dest);
+  try {
+    await fs.mkdir(dest);
+  } catch (error) {
+    if (error.code === "EEXIST") {
+      return;
+    }
+    throw error;
+  }
+
   const entries = await fs.readdir(src, { withFileTypes: true });
   for (let entry of entries) {
     const sourcePath = path.join(src, entry.name);
