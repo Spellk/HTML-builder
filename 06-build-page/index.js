@@ -26,6 +26,15 @@ async function replaceTemplateTags(template, components) {
 
 async function buildPage() {
   try {
+    // Удалить старую директорию project-dist, если она существует
+    try {
+      await fs.access(distDir);
+      await fs.rmdir(distDir, { recursive: true });
+    } catch (error) {
+      // Директория не существует, можно продолжить
+    }
+
+    // Создать новую директорию project-dist
     await fs.mkdir(distDir);
 
     const templateContent = await fs.readFile(tempFile, "utf-8");
